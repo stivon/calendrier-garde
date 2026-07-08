@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendrier de garde — Philippine & Pablo</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f3;color:#1a1a1a;min-height:100vh}
+header{background:#185fa5;color:#fff;padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between}
+header h1{font-size:18px;font-weight:500}
+header p{font-size:13px;opacity:0.75;margin-top:2px}
+.container{max-width:860px;margin:0 auto;padding:1.5rem}
+.cal-card{background:#fff;border-radius:12px;border:1px solid #e5e5e3;overflow:hidden;margin-bottom:1.5rem}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1.25rem;border-bottom:1px solid #e5e5e3}
+.cal-nav h2{font-size:16px;font-weight:500;color:#1a1a1a}
+.cal-nav button{background:none;border:1px solid #d0d0cc;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:13px;color:#1a1a1a;font-family:inherit}
+.cal-nav button:hover{background:#f5f5f3}
+.cal-nav button:disabled{opacity:0.3;cursor:default}
+.legend{display:flex;gap:14px;padding:0.55rem 1.25rem;font-size:12px;color:#666;border-bottom:1px solid #e5e5e3;flex-wrap:wrap;align-items:center;background:#fafaf9}
+.legend-item{display:flex;align-items:center;gap:5px}
+.counter{margin-left:auto;font-size:12px;color:#999;font-weight:500}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);border-left:1px solid #e5e5e3;border-top:1px solid #e5e5e3}
+.day-header{text-align:center;font-size:11px;font-weight:600;color:#888;padding:6px 2px;border-right:1px solid #e5e5e3;border-bottom:1px solid #e5e5e3;text-transform:uppercase;letter-spacing:0.04em;background:#fafaf9}
+.day-cell{min-height:72px;border-right:1px solid #e5e5e3;border-bottom:1px solid #e5e5e3;padding:6px;cursor:pointer;position:relative;transition:background 0.1s;user-select:none}
+.day-cell:hover{background:#f0f7ff}
+.day-cell.empty{background:#fafaf9;cursor:default;pointer-events:none}
+.day-cell.type-day,.day-cell.type-full{background:#e6f1fb}
+.day-cell.type-day:hover,.day-cell.type-full:hover{background:#cce3f7}
+.day-cell.type-evening::after,.day-cell.type-full::after{content:'';position:absolute;left:0;right:0;bottom:0;height:30%;background:#0c447c;pointer-events:none}
+.day-cell.updating{opacity:0.5;pointer-events:none}
+.day-num{font-size:12px;font-weight:600;color:#1a1a1a;line-height:1.3}
+.day-cell.empty .day-num{color:#ccc}
+.day-cell.today .day-num{background:#185fa5;color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px}
+.custody-label{font-size:10px;color:#185fa5;font-weight:600;margin-top:2px}
+.note-preview{font-size:10px;color:#555;margin-top:3px;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.note-btn{position:absolute;top:3px;right:3px;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:11px;border-radius:50%;cursor:pointer;opacity:0.25;line-height:1}
+.note-btn:hover{opacity:0.7;background:rgba(0,0,0,0.06)}
+.note-btn.has-note{opacity:1;background:rgba(226,75,74,0.12)}
+.note-btn.has-note:hover{background:rgba(226,75,74,0.22)}
+/* Spinner */
+.spinner-wrap{display:flex;align-items:center;justify-content:center;padding:4rem 1rem;flex-direction:column;gap:12px;color:#888;font-size:13px}
+.spinner{width:28px;height:28px;border:3px solid #e5e5e3;border-top-color:#185fa5;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-error{padding:2.5rem 1.5rem;text-align:center;color:#a32d2d;font-size:13px}
+/* Modal */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;z-index:100}
+.modal{background:#fff;border-radius:12px;border:1px solid #e5e5e3;padding:1.35rem;width:340px;max-width:94vw;box-shadow:0 8px 32px rgba(0,0,0,0.15)}
+.modal h3{font-size:15px;font-weight:600;color:#1a1a1a;margin-bottom:4px}
+.type-buttons{display:flex;gap:6px;margin-bottom:0.9rem}
+.type-buttons button{flex:1;padding:7px 4px;border-radius:8px;font-size:11px;cursor:pointer;border:1px solid #d0d0cc;background:#fff;color:#1a1a1a;font-family:inherit;text-align:center}
+.type-buttons button:hover{background:#f5f5f3}
+.type-buttons button.active{background:#185fa5;color:#fff;border-color:#185fa5}
+.modal textarea{width:100%;min-height:100px;resize:vertical;font-size:13px;font-family:inherit;color:#1a1a1a;background:#fafaf9;border:1px solid #d0d0cc;border-radius:8px;padding:9px;line-height:1.5}
+.modal textarea:focus{outline:none;border-color:#185fa5}
+.modal-actions{display:flex;gap:8px;margin-top:0.8rem;justify-content:flex-end}
+.modal-actions button{padding:7px 14px;border-radius:8px;font-size:13px;cursor:pointer;border:1px solid #d0d0cc;background:none;color:#1a1a1a;font-family:inherit}
+.modal-actions button:hover{background:#f5f5f3}
+.modal-actions .save-btn{background:#185fa5;color:#fff;border-color:#185fa5}
+.modal-actions .save-btn:hover{background:#0c447c}
+.modal-actions .del-btn{color:#a32d2d;border-color:#e8bfbf}
+.modal-actions .del-btn:hover{background:#fdf0f0}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Calendrier de garde</h1>
+    <p>Philippine &amp; Pablo · Novembre 2024 – Juin 2026</p>
+  </div>
+</header>
+<div class="container">
+  <div class="cal-card" id="cal">
+    <div class="spinner-wrap"><div class="spinner"></div><span>Chargement…</span></div>
+  </div>
+</div>
+
+<script>
+const MFR=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const DFR=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+
+let cy=2024,cm=10,notes={},custodyMap=new Map(),modal=null,ready=false;
+
+function dk(y,m,d){return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
+
+async function loadData(){
+  try{
+    const [daysRes,notesRes]=await Promise.all([fetch('/api/days'),fetch('/api/notes')]);
+    if(!daysRes.ok||!notesRes.ok)throw new Error('Réponse API invalide');
+    const days=await daysRes.json();
+    const notesArr=await notesRes.json();
+    custodyMap=new Map(days.map(d=>[d.date,{source:d.source,type:d.type}]));
+    notes={};
+    notesArr.forEach(n=>{notes[n.date]=n.text;});
+    ready=true;
+    render();
+  }catch(e){
+    document.getElementById('cal').innerHTML='<div class="load-error">Impossible de charger les données. Vérifiez votre connexion et rechargez la page.</div>';
+  }
+}
+
+async function toggleCustody(key,cellEl){
+  const prevEntry=custodyMap.get(key);
+  const wasCust=!!prevEntry;
+  cellEl.classList.add('updating');
+  try{
+    if(wasCust){
+      const res=await fetch(`/api/days/${key}`,{method:'DELETE'});
+      if(!res.ok)throw new Error();
+      custodyMap.delete(key);
+    }else{
+      const res=await fetch(`/api/days/${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'day',source:'manual'})});
+      if(!res.ok)throw new Error();
+      const data=await res.json();
+      custodyMap.set(key,{source:data.source,type:data.type});
+    }
+  }catch(e){
+    if(wasCust)custodyMap.set(key,prevEntry);
+    else custodyMap.delete(key);
+    alert('Erreur lors de la mise à jour du jour de garde.');
+  }
+  render();
+}
+
+async function setCustodyType(key,type,bd){
+  try{
+    const res=await fetch(`/api/days/${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,source:'manual'})});
+    if(!res.ok)throw new Error();
+    const data=await res.json();
+    custodyMap.set(key,{source:data.source,type:data.type});
+    bd.querySelectorAll('.type-btn').forEach(b=>b.classList.toggle('active',b.dataset.type===type));
+  }catch(e){
+    alert('Erreur lors de la mise à jour du type de garde.');
+  }
+  render();
+}
+
+async function saveNote(date,text){
+  text=text.trim();
+  try{
+    if(text){
+      const res=await fetch(`/api/notes/${date}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+      if(!res.ok)throw new Error();
+      notes[date]=text;
+    }else{
+      const res=await fetch(`/api/notes/${date}`,{method:'DELETE'});
+      if(!res.ok)throw new Error();
+      delete notes[date];
+    }
+  }catch(e){
+    alert('Erreur lors de la sauvegarde de la note.');
+  }
+  render();
+}
+
+function openModal(key,label){
+  const ex=notes[key]||'';
+  const entry=custodyMap.get(key);
+  const currentType=entry?entry.type:null;
+  const bd=document.createElement('div');
+  bd.className='modal-backdrop';
+  bd.innerHTML=`<div class="modal">
+    <h3>${label}</h3>
+    <div class="type-buttons">
+      <button class="type-btn${currentType==='evening'?' active':''}" data-type="evening">🌙 Soir</button>
+      <button class="type-btn${currentType==='day'?' active':''}" data-type="day">☀️ Journée</button>
+      <button class="type-btn${currentType==='full'?' active':''}" data-type="full">☀️🌙 Journée + nuit</button>
+    </div>
+    <textarea id="nt" placeholder="Ajouter une note...">${ex}</textarea>
+    <div class="modal-actions">
+      ${ex?'<button class="del-btn" id="db">Supprimer</button>':''}
+      <button id="cb">Annuler</button>
+      <button class="save-btn" id="sb">Enregistrer</button>
+    </div>
+  </div>`;
+  bd.addEventListener('click',e=>{if(e.target===bd)closeModal();});
+  bd.querySelector('#cb').onclick=closeModal;
+  bd.querySelector('#sb').onclick=()=>{saveNote(key,bd.querySelector('#nt').value);closeModal();};
+  bd.querySelectorAll('.type-btn').forEach(btn=>{
+    btn.onclick=()=>setCustodyType(key,btn.dataset.type,bd);
+  });
+  const db=bd.querySelector('#db');
+  if(db)db.onclick=()=>{saveNote(key,'');closeModal();};
+  document.body.appendChild(bd);
+  modal=bd;
+  setTimeout(()=>bd.querySelector('#nt').focus(),50);
+}
+function closeModal(){if(modal){modal.remove();modal=null;}}
+
+function render(){
+  if(!ready)return;
+  const today=new Date();
+  const todayKey=dk(today.getFullYear(),today.getMonth(),today.getDate());
+  const first=new Date(cy,cm,1);
+  const last=new Date(cy,cm+1,0);
+  let sd=first.getDay();sd=sd===0?6:sd-1;
+  const total=Math.ceil((sd+last.getDate())/7)*7;
+  const prefix=`${cy}-${String(cm+1).padStart(2,'0')}`;
+  const count=[...custodyMap.keys()].filter(d=>d.startsWith(prefix)).length;
+  const canPrev=!(cy===2024&&cm===10);
+  const canNext=!(cy===2026&&cm===5);
+
+  let html=`
+  <div class="legend">
+    <div class="legend-item"><span>🌙</span>Soir</div>
+    <div class="legend-item"><span>☀️</span>Journée</div>
+    <div class="legend-item"><span>☀️🌙</span>Journée + nuit</div>
+    <div class="legend-item"><span>✏️</span>Ajouté manuellement</div>
+    <div class="legend-item"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#e24b4a;vertical-align:middle"></span>Note</div>
+    <span class="counter">${count} jour${count>1?'s':''} de garde</span>
+  </div>
+  <div class="cal-nav">
+    <button id="prev" ${canPrev?'':'disabled'}>‹ Préc.</button>
+    <h2>${MFR[cm]} ${cy}</h2>
+    <button id="next" ${canNext?'':'disabled'}>Suiv. ›</button>
+  </div>
+  <div class="cal-grid">`;
+  DFR.forEach(d=>{html+=`<div class="day-header">${d}</div>`;});
+  for(let i=0;i<total;i++){
+    const dn=i-sd+1;
+    if(dn<1||dn>last.getDate()){html+=`<div class="day-cell empty"><span class="day-num"></span></div>`;}
+    else{
+      const key=dk(cy,cm,dn);
+      const entry=custodyMap.get(key);
+      const isCust=!!entry;
+      const isManual=isCust&&entry.source==='manual';
+      const typeClass=isCust?`type-${entry.type}`:'';
+      const isToday=key===todayKey;
+      const hasNote=!!notes[key];
+      const label=`${dn} ${MFR[cm]} ${cy}`;
+      html+=`<div class="day-cell ${typeClass}${isToday?' today':''}" data-key="${key}" data-label="${label}">
+        <span class="note-btn${hasNote?' has-note':''}" data-key="${key}" data-label="${label}" title="Note">📝</span>
+        <span class="day-num">${dn}</span>
+        ${isCust?`<div class="custody-label">Papa 👨${isManual?' ✏️':''}</div>`:''}
+        ${hasNote?`<div class="note-preview">${notes[key]}</div>`:''}
+      </div>`;
+    }
+  }
+  html+='</div>';
+  document.getElementById('cal').innerHTML=html;
+  document.getElementById('prev').onclick=()=>{if(!canPrev)return;cm--;if(cm<0){cm=11;cy--;}render();};
+  document.getElementById('next').onclick=()=>{if(!canNext)return;cm++;if(cm>11){cm=0;cy++;}render();};
+  document.querySelectorAll('.day-cell:not(.empty)').forEach(el=>{
+    el.addEventListener('click',()=>toggleCustody(el.dataset.key,el));
+  });
+  document.querySelectorAll('.note-btn').forEach(el=>{
+    el.addEventListener('click',e=>{
+      e.stopPropagation();
+      openModal(el.dataset.key,el.dataset.label);
+    });
+  });
+}
+
+loadData();
+</script>
+</body>
+</html>
