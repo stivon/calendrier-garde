@@ -25,10 +25,8 @@ header p{font-size:13px;opacity:0.75;margin-top:2px}
 .cal-grid{flex:1;display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:1fr;border-left:1px solid #e5e5e3;overflow:hidden}
 .day-header{text-align:center;font-size:12px;font-weight:600;color:#888;padding:10px 2px;border-right:1px solid #e5e5e3;border-bottom:1px solid #e5e5e3;text-transform:uppercase;letter-spacing:0.04em;background:#fafaf9}
 .day-cell{border-right:1px solid #e5e5e3;border-bottom:1px solid #e5e5e3;padding:10px;cursor:pointer;position:relative;transition:background 0.1s;user-select:none;overflow:hidden}
-.day-cell:hover{background:#f0f7ff}
 .day-cell.empty{background:#fafaf9;cursor:default;pointer-events:none}
 .day-cell.type-day,.day-cell.type-full{background:#e6f1fb}
-.day-cell.type-day:hover,.day-cell.type-full:hover{background:#cce3f7}
 .day-cell.type-evening::after,.day-cell.type-full::after{content:'';position:absolute;left:0;right:0;bottom:0;height:30%;background:#0c447c;pointer-events:none}
 .day-cell.updating{opacity:0.5;pointer-events:none}
 .day-num{font-size:15px;font-weight:600;color:#1a1a1a;line-height:1.3}
@@ -36,10 +34,12 @@ header p{font-size:13px;opacity:0.75;margin-top:2px}
 .day-cell.today .day-num{background:#185fa5;color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px}
 .custody-label{font-size:12px;color:#185fa5;font-weight:600;margin-top:4px}
 .note-preview{font-size:11px;color:#555;margin-top:5px;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical}
-.note-btn{position:absolute;top:5px;right:5px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:12px;border-radius:50%;cursor:pointer;opacity:0.25;line-height:1}
-.note-btn:hover{opacity:0.7;background:rgba(0,0,0,0.06)}
+.note-btn{position:absolute;top:5px;right:5px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:12px;border-radius:50%;cursor:pointer;opacity:0.7;line-height:1}
+.note-btn:hover{opacity:1;background:rgba(0,0,0,0.06)}
 .note-btn.has-note{opacity:1;background:rgba(226,75,74,0.12)}
 .note-btn.has-note:hover{background:rgba(226,75,74,0.22)}
+.edit-btn{position:absolute;top:5px;right:28px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:12px;border-radius:50%;cursor:pointer;opacity:0.7;line-height:1}
+.edit-btn:hover{opacity:1;background:rgba(0,0,0,0.06)}
 /* Spinner */
 .spinner-wrap{display:flex;align-items:center;justify-content:center;padding:4rem 1rem;flex-direction:column;gap:12px;color:#888;font-size:13px}
 .spinner{width:28px;height:28px;border:3px solid #e5e5e3;border-top-color:#185fa5;border-radius:50%;animation:spin 0.8s linear infinite}
@@ -47,7 +47,7 @@ header p{font-size:13px;opacity:0.75;margin-top:2px}
 .load-error{padding:2.5rem 1.5rem;text-align:center;color:#a32d2d;font-size:13px}
 /* Modal */
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;z-index:100}
-.modal{background:#fff;border-radius:12px;border:1px solid #e5e5e3;padding:1.35rem;width:340px;max-width:94vw;box-shadow:0 8px 32px rgba(0,0,0,0.15)}
+.modal{background:#fff;border-radius:12px;border:1px solid #e5e5e3;padding:1.75rem;width:460px;max-width:94vw;box-shadow:0 8px 32px rgba(0,0,0,0.15)}
 .modal h3{font-size:15px;font-weight:600;color:#1a1a1a;margin-bottom:4px}
 .type-buttons{display:flex;gap:6px;margin-bottom:0.9rem}
 .type-buttons button{flex:1;padding:7px 4px;border-radius:8px;font-size:11px;cursor:pointer;border:1px solid #d0d0cc;background:#fff;color:#1a1a1a;font-family:inherit;text-align:center}
@@ -102,40 +102,71 @@ async function loadData(){
   }
 }
 
-async function toggleCustody(key,cellEl){
-  const prevEntry=custodyMap.get(key);
-  const wasCust=!!prevEntry;
-  cellEl.classList.add('updating');
-  try{
-    if(wasCust){
-      const res=await fetch(`/api/days/${key}`,{method:'DELETE'});
-      if(!res.ok)throw new Error();
-      custodyMap.delete(key);
-    }else{
-      const res=await fetch(`/api/days/${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'day',source:'manual'})});
-      if(!res.ok)throw new Error();
-      const data=await res.json();
-      custodyMap.set(key,{source:data.source,type:data.type});
-    }
-  }catch(e){
-    if(wasCust)custodyMap.set(key,prevEntry);
-    else custodyMap.delete(key);
-    alert('Erreur lors de la mise à jour du jour de garde.');
-  }
-  render();
+function openCustodyModal(key,label){
+  const entry=custodyMap.get(key);
+  let pendingType=entry?entry.type:null;
+  const bd=document.createElement('div');
+  bd.className='modal-backdrop';
+  bd.innerHTML=`<div class="modal">
+    <h3>${label}</h3>
+    <div class="type-buttons" style="margin-top:0.9rem">
+      <button class="type-btn${pendingType==='evening'?' active':''}" data-type="evening">🌙 Soir</button>
+      <button class="type-btn${pendingType==='day'?' active':''}" data-type="day">☀️ Journée</button>
+      <button class="type-btn${pendingType==='full'?' active':''}" data-type="full">☀️🌙 Journée + nuit</button>
+    </div>
+    <div class="modal-actions">
+      <button id="cb">Annuler</button>
+      <button class="save-btn" id="sb">Enregistrer</button>
+    </div>
+  </div>`;
+  bd.addEventListener('click',e=>{if(e.target===bd)closeModal();});
+  bd.querySelector('#cb').onclick=closeModal;
+  bd.querySelectorAll('.type-btn').forEach(btn=>{
+    btn.onclick=()=>{
+      pendingType=pendingType===btn.dataset.type?null:btn.dataset.type;
+      bd.querySelectorAll('.type-btn').forEach(b=>b.classList.toggle('active',b.dataset.type===pendingType));
+    };
+  });
+  bd.querySelector('#sb').onclick=async()=>{
+    try{
+      if(pendingType){
+        const res=await fetch(`/api/days/${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:pendingType,source:'manual'})});
+        if(!res.ok)throw new Error();
+        const data=await res.json();
+        custodyMap.set(key,{source:data.source,type:data.type});
+      }else if(entry){
+        const res=await fetch(`/api/days/${key}`,{method:'DELETE'});
+        if(!res.ok)throw new Error();
+        custodyMap.delete(key);
+      }
+    }catch(e){alert('Erreur lors de la mise à jour du jour de garde.');}
+    closeModal();render();
+  };
+  document.body.appendChild(bd);
+  modal=bd;
 }
 
-async function setCustodyType(key,type,bd){
-  try{
-    const res=await fetch(`/api/days/${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,source:'manual'})});
-    if(!res.ok)throw new Error();
-    const data=await res.json();
-    custodyMap.set(key,{source:data.source,type:data.type});
-    bd.querySelectorAll('.type-btn').forEach(b=>b.classList.toggle('active',b.dataset.type===type));
-  }catch(e){
-    alert('Erreur lors de la mise à jour du type de garde.');
-  }
-  render();
+function openNoteModal(key,label){
+  const ex=notes[key]||'';
+  const bd=document.createElement('div');
+  bd.className='modal-backdrop';
+  bd.innerHTML=`<div class="modal">
+    <h3>${label}</h3>
+    <textarea id="nt" placeholder="Ajouter une note...">${ex}</textarea>
+    <div class="modal-actions">
+      ${ex?'<button class="del-btn" id="db">Supprimer note</button>':''}
+      <button id="cb">Annuler</button>
+      <button class="save-btn" id="sb">Enregistrer</button>
+    </div>
+  </div>`;
+  bd.addEventListener('click',e=>{if(e.target===bd)closeModal();});
+  bd.querySelector('#cb').onclick=closeModal;
+  bd.querySelector('#sb').onclick=()=>{saveNote(key,bd.querySelector('#nt').value);closeModal();};
+  const db=bd.querySelector('#db');
+  if(db)db.onclick=()=>{saveNote(key,'');closeModal();};
+  document.body.appendChild(bd);
+  modal=bd;
+  setTimeout(()=>bd.querySelector('#nt').focus(),50);
 }
 
 async function saveNote(date,text){
@@ -156,38 +187,6 @@ async function saveNote(date,text){
   render();
 }
 
-function openModal(key,label){
-  const ex=notes[key]||'';
-  const entry=custodyMap.get(key);
-  const currentType=entry?entry.type:null;
-  const bd=document.createElement('div');
-  bd.className='modal-backdrop';
-  bd.innerHTML=`<div class="modal">
-    <h3>${label}</h3>
-    <div class="type-buttons">
-      <button class="type-btn${currentType==='evening'?' active':''}" data-type="evening">🌙 Soir</button>
-      <button class="type-btn${currentType==='day'?' active':''}" data-type="day">☀️ Journée</button>
-      <button class="type-btn${currentType==='full'?' active':''}" data-type="full">☀️🌙 Journée + nuit</button>
-    </div>
-    <textarea id="nt" placeholder="Ajouter une note...">${ex}</textarea>
-    <div class="modal-actions">
-      ${ex?'<button class="del-btn" id="db">Supprimer</button>':''}
-      <button id="cb">Annuler</button>
-      <button class="save-btn" id="sb">Enregistrer</button>
-    </div>
-  </div>`;
-  bd.addEventListener('click',e=>{if(e.target===bd)closeModal();});
-  bd.querySelector('#cb').onclick=closeModal;
-  bd.querySelector('#sb').onclick=()=>{saveNote(key,bd.querySelector('#nt').value);closeModal();};
-  bd.querySelectorAll('.type-btn').forEach(btn=>{
-    btn.onclick=()=>setCustodyType(key,btn.dataset.type,bd);
-  });
-  const db=bd.querySelector('#db');
-  if(db)db.onclick=()=>{saveNote(key,'');closeModal();};
-  document.body.appendChild(bd);
-  modal=bd;
-  setTimeout(()=>bd.querySelector('#nt').focus(),50);
-}
 function closeModal(){if(modal){modal.remove();modal=null;}}
 
 function render(){
@@ -212,7 +211,6 @@ function render(){
     <div class="legend-item"><span>🌙</span>Soir</div>
     <div class="legend-item"><span>☀️</span>Journée</div>
     <div class="legend-item"><span>☀️🌙</span>Journée + nuit</div>
-    <div class="legend-item"><span>✏️</span>Ajouté manuellement</div>
     <div class="legend-item"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#e24b4a;vertical-align:middle"></span>Note</div>
     <span class="counter">${count} jour${count>1?'s':''} de garde</span>
   </div>
@@ -237,10 +235,10 @@ function render(){
       const isToday=key===todayKey;
       const hasNote=!!notes[key];
       const label=`${dn} ${MFR[cm]} ${cy}`;
-      html+=`<div class="day-cell ${typeClass}${isToday?' today':''}" data-key="${key}" data-label="${label}">
+      html+=`<div class="day-cell ${typeClass}${isCust?' has-custody':''}${isToday?' today':''}" data-key="${key}" data-label="${label}">
+        <span class="edit-btn" data-key="${key}" data-label="${label}" title="Modifier la garde">✏️</span>
         <span class="note-btn${hasNote?' has-note':''}" data-key="${key}" data-label="${label}" title="Note">📝</span>
         <span class="day-num">${dn}</span>
-        ${isCust?`<div class="custody-label">Papa 👨${isManual?' ✏️':''}</div>`:''}
         ${hasNote?`<div class="note-preview">${notes[key]}</div>`:''}
       </div>`;
     }
@@ -250,13 +248,15 @@ function render(){
   document.getElementById('prev').onclick=()=>{if(!canPrev)return;cm--;if(cm<0){cm=11;cy--;}render();};
   document.getElementById('next').onclick=()=>{if(!canNext)return;cm++;if(cm>11){cm=0;cy++;}render();};
   document.querySelectorAll('.day-cell:not(.empty)').forEach(el=>{
-    el.addEventListener('click',()=>toggleCustody(el.dataset.key,el));
+    el.addEventListener('click',()=>{
+      if(!custodyMap.has(el.dataset.key))openCustodyModal(el.dataset.key,el.dataset.label);
+    });
+  });
+  document.querySelectorAll('.edit-btn').forEach(el=>{
+    el.addEventListener('click',e=>{e.stopPropagation();openCustodyModal(el.dataset.key,el.dataset.label);});
   });
   document.querySelectorAll('.note-btn').forEach(el=>{
-    el.addEventListener('click',e=>{
-      e.stopPropagation();
-      openModal(el.dataset.key,el.dataset.label);
-    });
+    el.addEventListener('click',e=>{e.stopPropagation();openNoteModal(el.dataset.key,el.dataset.label);});
   });
 }
 
