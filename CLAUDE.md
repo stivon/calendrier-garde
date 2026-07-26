@@ -6,6 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 npm start          # Lance le serveur (node server.js) sur le port 3000
+node backup.js     # Exporte la BDD en JSON dans backup/ (jours + notes)
 ```
 
 Pas de tests, pas de build step, pas de linter configuré. Pour tester manuellement les routes API en local :
@@ -15,9 +16,29 @@ curl -X POST http://localhost:3000/api/days/2026-07-04 -H "Content-Type: applica
 curl -X DELETE http://localhost:3000/api/days/2026-07-04
 ```
 
+## Git
+
+```bash
+git status                        # Voir les fichiers modifiés
+git add public/index.html         # Stager un fichier
+git commit -m "message"           # Commiter
+git push origin main              # Pousser main sur GitHub
+git push origin feature/xxx       # Pousser une branche feature
+
+# Créer et basculer sur une nouvelle branche
+git checkout -b feature/nom-feature
+
+# Merger une feature dans main
+git checkout main
+git merge feature/nom-feature
+git push origin main
+```
+
+Branche principale : `main`. Les features se font sur des branches `feature/xxx`.
+
 ## Architecture
 
-Application Node.js/Express qui sert un calendrier de garde partagé pour deux enfants (Philippine & Pablo, nov. 2024 – juin 2026). MongoDB Atlas est la source de vérité unique — pas de localStorage, pas de données codées en dur côté client.
+Application Node.js/Express qui sert un calendrier de garde partagé pour deux enfants (Philippine & Pablo). Plage navigable : novembre 2024 → aujourd'hui + 2 ans (dynamique). MongoDB Atlas est la source de vérité unique — pas de localStorage, pas de données codées en dur côté client.
 
 ```
 server.js          → point d'entrée : connexion Mongo, seed initial, static + routes
@@ -67,10 +88,16 @@ SPA sans framework. État côté client :
 - `notes` : `{[date]: text}` — chargé via `GET /api/notes` au démarrage
 
 Interactions dans chaque cellule du calendrier :
-- **Clic sur le fond de la cellule** → `toggleCustody()` : POST si le jour n'est pas garde, DELETE sinon. Mise à jour optimiste avec rollback en cas d'erreur réseau.
-- **Clic sur l'icône 📝 (top-right)** → `openModal()` : affiche la modale avec les 3 boutons de type + textarea de note. Les boutons de type appellent `setCustodyType()` directement sans fermer la modale.
+- **Clic sur cellule vide** → `openCustodyModal()` : modale de choix du type de garde
+- **Clic sur cellule avec garde** → rien (protection contre suppression accidentelle)
+- **Bouton ✏️ (top-right, à gauche de 📝)** → `openCustodyModal()` : modifier ou supprimer la garde (désélectionner le type + Enregistrer = supprime)
+- **Bouton 📝 (top-right)** → `openNoteModal()` : ajouter/modifier/supprimer la note uniquement
 
-Rendu visuel par type géré par les classes CSS `.type-evening`, `.type-day`, `.type-full` sur `.day-cell`. La bande bleue foncée est un pseudo-élément `::after`.
+Les notes et les jours de garde sont **indépendants** : on peut avoir l'un sans l'autre.
+
+Rendu visuel par type géré par les classes CSS `.type-evening`, `.type-day`, `.type-full` sur `.day-cell`. La bande bleue foncée (20% hauteur) est un pseudo-élément `::after`.
+
+La légende et les boutons de la modale utilisent des mini-blocs CSS (`.legend-swatch`) qui reproduisent visuellement l'apparence des cellules.
 
 ## Variables d'environnement
 
