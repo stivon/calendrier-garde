@@ -20,6 +20,10 @@ header p{font-size:13px;opacity:0.75;margin-top:2px}
 .cal-nav button:disabled{opacity:0.3;cursor:default}
 .legend{display:flex;gap:14px;padding:0.5rem 1.5rem;font-size:12px;color:#666;border-bottom:1px solid #e5e5e3;flex-wrap:wrap;align-items:center;background:#fafaf9;flex-shrink:0}
 .legend-item{display:flex;align-items:center;gap:5px}
+.legend-swatch{display:inline-block;width:18px;height:18px;border-radius:3px;border:1px solid #d0d0cc;flex-shrink:0}
+.swatch-evening{background:linear-gradient(to bottom,#f5f5f3 65%,#0c447c 35%)}
+.swatch-day{background:#e6f1fb}
+.swatch-full{background:linear-gradient(to bottom,#e6f1fb 65%,#0c447c 35%)}
 .counter{margin-left:auto;font-size:12px;color:#999;font-weight:500}
 .cal-week-headers{display:grid;grid-template-columns:repeat(7,1fr);border-left:1px solid #e5e5e3;border-top:1px solid #e5e5e3;flex-shrink:0}
 .cal-grid{flex:1;display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:1fr;border-left:1px solid #e5e5e3;overflow:hidden}
@@ -50,7 +54,7 @@ header p{font-size:13px;opacity:0.75;margin-top:2px}
 .modal{background:#fff;border-radius:12px;border:1px solid #e5e5e3;padding:1.75rem;width:460px;max-width:94vw;box-shadow:0 8px 32px rgba(0,0,0,0.15)}
 .modal h3{font-size:15px;font-weight:600;color:#1a1a1a;margin-bottom:4px}
 .type-buttons{display:flex;gap:6px;margin-bottom:0.9rem}
-.type-buttons button{flex:1;padding:7px 4px;border-radius:8px;font-size:11px;cursor:pointer;border:1px solid #d0d0cc;background:#fff;color:#1a1a1a;font-family:inherit;text-align:center}
+.type-buttons button{flex:1;padding:7px 4px;border-radius:8px;font-size:11px;cursor:pointer;border:1px solid #d0d0cc;background:#fff;color:#1a1a1a;font-family:inherit;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px}
 .type-buttons button:hover{background:#f5f5f3}
 .type-buttons button.active{background:#185fa5;color:#fff;border-color:#185fa5}
 .modal textarea{width:100%;min-height:100px;resize:vertical;font-size:13px;font-family:inherit;color:#1a1a1a;background:#fafaf9;border:1px solid #d0d0cc;border-radius:8px;padding:9px;line-height:1.5}
@@ -110,9 +114,9 @@ function openCustodyModal(key,label){
   bd.innerHTML=`<div class="modal">
     <h3>${label}</h3>
     <div class="type-buttons" style="margin-top:0.9rem">
-      <button class="type-btn${pendingType==='evening'?' active':''}" data-type="evening">🌙 Soir</button>
-      <button class="type-btn${pendingType==='day'?' active':''}" data-type="day">☀️ Journée</button>
-      <button class="type-btn${pendingType==='full'?' active':''}" data-type="full">☀️🌙 Journée + nuit</button>
+      <button class="type-btn${pendingType==='evening'?' active':''}" data-type="evening"><span class="legend-swatch swatch-evening"></span>Soir</button>
+      <button class="type-btn${pendingType==='day'?' active':''}" data-type="day"><span class="legend-swatch swatch-day"></span>Journée</button>
+      <button class="type-btn${pendingType==='full'?' active':''}" data-type="full"><span class="legend-swatch swatch-full"></span>Journée + nuit</button>
     </div>
     <div class="modal-actions">
       <button id="cb">Annuler</button>
@@ -208,9 +212,9 @@ function render(){
 
   let html=`
   <div class="legend">
-    <div class="legend-item"><span>🌙</span>Soir</div>
-    <div class="legend-item"><span>☀️</span>Journée</div>
-    <div class="legend-item"><span>☀️🌙</span>Journée + nuit</div>
+    <div class="legend-item"><span class="legend-swatch swatch-evening"></span>Soir</div>
+    <div class="legend-item"><span class="legend-swatch swatch-day"></span>Journée</div>
+    <div class="legend-item"><span class="legend-swatch swatch-full"></span>Journée + nuit</div>
     <div class="legend-item"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#e24b4a;vertical-align:middle"></span>Note</div>
     <span class="counter">${count} jour${count>1?'s':''} de garde</span>
   </div>
