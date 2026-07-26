@@ -81,7 +81,8 @@ header p{font-size:13px;opacity:0.75;margin-top:2px}
 const MFR=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 const DFR=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
 
-let cy=2024,cm=10,notes={},custodyMap=new Map(),modal=null,ready=false;
+const _now=new Date();
+let cy=_now.getFullYear(),cm=_now.getMonth(),notes={},custodyMap=new Map(),modal=null,ready=false;
 
 function dk(y,m,d){return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
 
@@ -200,7 +201,8 @@ function render(){
   const prefix=`${cy}-${String(cm+1).padStart(2,'0')}`;
   const count=[...custodyMap.keys()].filter(d=>d.startsWith(prefix)).length;
   const canPrev=!(cy===2024&&cm===10);
-  const canNext=!(cy===2026&&cm===5);
+  const _limit=new Date();_limit.setFullYear(_limit.getFullYear()+2);
+  const canNext=!(cy>_limit.getFullYear()||(cy===_limit.getFullYear()&&cm>=_limit.getMonth()));
   const prevMonth=cm===0?11:cm-1;
   const prevYear=cm===0?cy-1:cy;
   const prevLast=new Date(prevYear,prevMonth+1,0).getDate();
