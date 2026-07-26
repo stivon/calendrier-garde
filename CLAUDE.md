@@ -18,23 +18,38 @@ curl -X DELETE http://localhost:3000/api/days/2026-07-04
 
 ## Git
 
-```bash
-git status                        # Voir les fichiers modifiés
-git add public/index.html         # Stager un fichier
-git commit -m "message"           # Commiter
-git push origin main              # Pousser main sur GitHub
-git push origin feature/xxx       # Pousser une branche feature
+Branche principale : `main`. Les features se font sur des branches `feature/xxx`.
 
-# Créer et basculer sur une nouvelle branche
+Process idéal (solo dev, branches locales) :
+
+```bash
+# 1. Créer la branche feature à jour
+git checkout main
+git pull origin main
 git checkout -b feature/nom-feature
 
-# Merger une feature dans main
+# 2. Travailler et commiter (autant de fois que nécessaire, 100% local)
+git add <fichiers>
+git commit -m "message"
+
+# 3. (Optionnel) Pousser la branche feature sur GitHub — sauvegarde/visibilité,
+#    pas obligatoire avant de merger
+git push origin feature/nom-feature
+
+# 4. Une fois la feature terminée : merger dans main en local
 git checkout main
+git pull origin main               # re-vérifier que main n'a pas bougé
 git merge feature/nom-feature
+
+# 5. Pousser main sur GitHub
 git push origin main
+
+# 6. Nettoyage (optionnel)
+git branch -d feature/nom-feature
+git push origin --delete feature/nom-feature   # si la branche avait été poussée
 ```
 
-Branche principale : `main`. Les features se font sur des branches `feature/xxx`.
+Point clé : le merge se fait toujours en local d'abord ; c'est seulement le résultat (sur `main`) qu'on pousse ensuite sur GitHub.
 
 ## Architecture
 
