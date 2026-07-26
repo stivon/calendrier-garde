@@ -1,0 +1,822 @@
+[
+  {
+    "date": "2025-05-17",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2025-08-22",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-09-16",
+    "source": "auto",
+    "type": "evening"
+  },
+  {
+    "date": "2025-09-21",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2025-10-26",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2026-01-22",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2026-02-23",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-02-25",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-03-19",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2026-04-23",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-05-09",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2026-06-14",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-06-20",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2025-04-12",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2025-06-15",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-06-28",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2025-08-31",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2025-09-02",
+    "source": "auto",
+    "type": "evening"
+  },
+  {
+    "date": "2025-09-09",
+    "source": "auto",
+    "type": "evening"
+  },
+  {
+    "date": "2025-09-28",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2025-11-09",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2026-02-26",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-02-27",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-02-28",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-03-01",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2026-03-13",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2026-03-24",
+    "source": "auto",
+    "type": "evening"
+  },
+  {
+    "date": "2026-04-24",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-04-27",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-04-29",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-04-30",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2026-05-12",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2026-05-26",
+    "source": "auto",
+    "type": "evening"
+  },
+  {
+    "date": "2026-06-07",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2026-06-18",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2026-06-30",
+    "source": "auto",
+    "type": "evening"
+  },
+  {
+    "date": "2025-06-03",
+    "source": "auto",
+    "type": "evening"
+  },
+  {
+    "date": "2025-06-07",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2025-06-24",
+    "source": "auto",
+    "type": "evening"
+  },
+  {
+    "date": "2025-08-16",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-08-28",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-09-25",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2025-10-11",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2025-11-01",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2025-11-21",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2025-12-12",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2026-01-25",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2026-02-22",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-02-24",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-03-27",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2026-04-25",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-06-02",
+    "source": "auto",
+    "type": "evening"
+  },
+  {
+    "date": "2026-06-09",
+    "source": "auto",
+    "type": "evening"
+  },
+  {
+    "date": "2026-06-13",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-09-20",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2025-09-30",
+    "source": "auto",
+    "type": "evening"
+  },
+  {
+    "date": "2025-11-26",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2025-12-07",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2025-12-17",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2026-01-17",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-01-18",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2026-01-31",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2026-03-10",
+    "source": "auto",
+    "type": "evening"
+  },
+  {
+    "date": "2026-03-14",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-03-15",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2026-03-22",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2026-04-26",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-06-12",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2026-06-23",
+    "source": "auto",
+    "type": "evening"
+  },
+  {
+    "date": "2026-06-28",
+    "source": "auto",
+    "type": "day"
+  },
+  {
+    "date": "2025-09-06",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-01-27",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-03-01",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-03-15",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-03-13",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-03-30",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-01-26",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-01-28",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-01-01",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-05-08",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-05-09",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-05-10",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-05-11",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-05-12",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-05-25",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-05-29",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-05-31",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-06-13",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2025-06-14",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-06-17",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2025-06-21",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-07-05",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-07-11",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2025-07-12",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-07-13",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-07-14",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-07-17",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2025-07-20",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-07-22",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-07-24",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-07-25",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-07-26",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-08-15",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2025-08-17",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-08-18",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-08-19",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-08-20",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-08-21",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-08-23",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-08-27",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-09-14",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-09-19",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2025-10-07",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-10-17",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2025-10-18",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-10-19",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-10-20",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-10-21",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-10-22",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-10-28",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-11-11",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-11-14",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2025-11-15",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-11-16",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-11-25",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2025-11-29",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-12-09",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2025-12-13",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-12-14",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-12-15",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-12-16",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2025-12-20",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2026-01-06",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2026-01-10",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2026-01-15",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2026-01-16",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-02-03",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2026-02-13",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2026-02-14",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-02-15",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2026-02-10",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2026-03-28",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2026-03-31",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2026-04-28",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-05-07",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2026-05-13",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-05-14",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-05-15",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-05-16",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-05-17",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-05-21",
+    "source": "manual",
+    "type": "evening"
+  },
+  {
+    "date": "2026-05-23",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2026-05-30",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2025-02-09",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2026-07-11",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-07-10",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-07-12",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-07-13",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-07-14",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-07-15",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-07-16",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-07-17",
+    "source": "manual",
+    "type": "full"
+  },
+  {
+    "date": "2026-07-18",
+    "source": "manual",
+    "type": "day"
+  },
+  {
+    "date": "2026-07-21",
+    "source": "manual",
+    "type": "evening"
+  }
+]
