@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
 const apiRoutes = require('./routes/api');
+const photoRoutes = require('./routes/photos');
 const CustodyDay = require('./models/CustodyDay');
 
 const app = express();
@@ -70,6 +71,7 @@ async function seedCustodyDays() {
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api', apiRoutes);
+app.use('/api/photos', photoRoutes);
 
 async function start() {
   if (!MONGODB_URI) {

@@ -44,6 +44,15 @@ header p{font-size:13px;opacity:0.75;margin-top:2px}
 .note-btn.has-note:hover{background:rgba(226,75,74,0.22)}
 .edit-btn{position:absolute;top:5px;right:28px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:12px;border-radius:50%;cursor:pointer;opacity:0.7;line-height:1}
 .edit-btn:hover{opacity:1;background:rgba(0,0,0,0.06)}
+.photo-btn{position:absolute;top:5px;right:52px;display:flex;align-items:center;gap:2px;padding:2px 6px;font-size:11px;border-radius:10px;cursor:pointer;opacity:0.85;background:rgba(24,95,165,0.08);line-height:1.4}
+.photo-btn:hover{opacity:1;background:rgba(24,95,165,0.16)}
+.import-btn{background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.4);border-radius:8px;padding:7px 14px;font-size:13px;cursor:pointer;font-family:inherit}
+.import-btn:hover{background:rgba(255,255,255,0.25)}
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:0.9rem;max-height:60vh;overflow-y:auto}
+.photo-item{position:relative}
+.photo-item img{width:100%;height:110px;object-fit:cover;border-radius:6px;border:1px solid #e5e5e3;display:block}
+.photo-del{position:absolute;top:4px;right:4px;background:rgba(255,255,255,0.9);border:none;border-radius:50%;width:22px;height:22px;cursor:pointer}
+.photo-move{width:100%;margin-top:4px;font-size:11px;padding:2px;border:1px solid #d0d0cc;border-radius:4px;font-family:inherit}
 /* Spinner */
 .spinner-wrap{display:flex;align-items:center;justify-content:center;padding:4rem 1rem;flex-direction:column;gap:12px;color:#888;font-size:13px}
 .spinner{width:28px;height:28px;border:3px solid #e5e5e3;border-top-color:#185fa5;border-radius:50%;animation:spin 0.8s linear infinite}
@@ -74,6 +83,8 @@ header p{font-size:13px;opacity:0.75;margin-top:2px}
     <h1>Calendrier de garde</h1>
     <p>Philippine &amp; Pablo · Novembre 2024 – Juin 2026</p>
   </div>
+  <button class="import-btn" id="import-btn">📷 Importer des photos</button>
+  <input type="file" id="photo-input" multiple accept="image/*" style="display:none">
 </header>
 <div class="container">
   <div class="cal-card" id="cal">
@@ -86,19 +97,25 @@ const MFR=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','S
 const DFR=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
 
 const _now=new Date();
-let cy=_now.getFullYear(),cm=_now.getMonth(),notes={},custodyMap=new Map(),modal=null,ready=false;
+let cy=_now.getFullYear(),cm=_now.getMonth(),notes={},custodyMap=new Map(),photosMap=new Map(),modal=null,ready=false;
 
 function dk(y,m,d){return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
 
 async function loadData(){
   try{
-    const [daysRes,notesRes]=await Promise.all([fetch('/api/days'),fetch('/api/notes')]);
-    if(!daysRes.ok||!notesRes.ok)throw new Error('Réponse API invalide');
+    const [daysRes,notesRes,photosRes]=await Promise.all([fetch('/api/days'),fetch('/api/notes'),fetch('/api/photos')]);
+    if(!daysRes.ok||!notesRes.ok||!photosRes.ok)throw new Error('Réponse API invalide');
     const days=await daysRes.json();
     const notesArr=await notesRes.json();
+    const photosArr=await photosRes.json();
     custodyMap=new Map(days.map(d=>[d.date,{source:d.source,type:d.type}]));
     notes={};
     notesArr.forEach(n=>{notes[n.date]=n.text;});
+    photosMap=new Map();
+    photosArr.forEach(p=>{
+      if(!photosMap.has(p.date))photosMap.set(p.date,[]);
+      photosMap.get(p.date).push(p);
+    });
     ready=true;
     render();
   }catch(e){
@@ -191,6 +208,82 @@ async function saveNote(date,text){
   render();
 }
 
+function openPhotoModal(key,label){
+  const photos=photosMap.get(key)||[];
+  const bd=document.createElement('div');
+  bd.className='modal-backdrop';
+  bd.innerHTML=`<div class="modal" style="width:600px">
+    <h3>${label}</h3>
+    <div class="photo-grid">
+      ${photos.map(p=>`
+        <div class="photo-item">
+          <img src="${p.url}" alt="${p.originalName||''}">
+          <button class="photo-del" data-id="${p._id}" title="Supprimer">🗑</button>
+          <input type="date" class="photo-move" data-id="${p._id}" value="${key}">
+        </div>
+      `).join('')}
+    </div>
+    <div class="modal-actions"><button id="cb">Fermer</button></div>
+  </div>`;
+  bd.addEventListener('click',e=>{if(e.target===bd)closeModal();});
+  bd.querySelector('#cb').onclick=closeModal;
+  bd.querySelectorAll('.photo-del').forEach(btn=>{
+    btn.onclick=async()=>{
+      try{
+        const res=await fetch(`/api/photos/${btn.dataset.id}`,{method:'DELETE'});
+        if(!res.ok)throw new Error();
+      }catch(e){alert('Erreur lors de la suppression de la photo.');}
+      closeModal();await loadData();
+    };
+  });
+  bd.querySelectorAll('.photo-move').forEach(inp=>{
+    inp.onchange=async()=>{
+      try{
+        const res=await fetch(`/api/photos/${inp.dataset.id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:inp.value})});
+        if(!res.ok)throw new Error();
+      }catch(e){alert('Erreur lors du déplacement de la photo.');}
+      closeModal();await loadData();
+    };
+  });
+  document.body.appendChild(bd);
+  modal=bd;
+}
+
+async function importPhotos(files){
+  const MAX_BATCH_BYTES=22*1024*1024;
+  const batches=[];
+  let current=[],currentSize=0;
+  files.forEach(f=>{
+    if(current.length&&currentSize+f.size>MAX_BATCH_BYTES){batches.push(current);current=[];currentSize=0;}
+    current.push(f);currentSize+=f.size;
+  });
+  if(current.length)batches.push(current);
+
+  const bd=document.createElement('div');
+  bd.className='modal-backdrop';
+  bd.innerHTML=`<div class="modal"><h3>Import des photos</h3><p id="import-status" style="margin-top:0.9rem;font-size:13px;color:#555">Préparation…</p></div>`;
+  document.body.appendChild(bd);
+  modal=bd;
+
+  const errors=[];
+  for(let i=0;i<batches.length;i++){
+    bd.querySelector('#import-status').textContent=`Lot ${i+1}/${batches.length} en cours d'envoi (${batches[i].length} photos)…`;
+    const fd=new FormData();
+    batches[i].forEach(f=>{fd.append('photos',f);fd.append('mtimes',f.lastModified);});
+    try{
+      const res=await fetch('/api/photos/batch',{method:'POST',body:fd});
+      if(!res.ok)throw new Error();
+      const data=await res.json();
+      data.results.forEach(r=>{if(r.error)errors.push(`${r.originalName} : ${r.error}`);});
+    }catch(e){
+      errors.push(`Lot ${i+1}/${batches.length} : échec de l'envoi`);
+    }
+  }
+  closeModal();
+  await loadData();
+  if(errors.length)alert(`Import terminé avec ${errors.length} erreur(s) :\n${errors.join('\n')}`);
+}
+
 function closeModal(){if(modal){modal.remove();modal=null;}}
 
 function render(){
@@ -238,9 +331,11 @@ function render(){
       const typeClass=isCust?`type-${entry.type}`:'';
       const isToday=key===todayKey;
       const hasNote=!!notes[key];
+      const photoCount=photosMap.has(key)?photosMap.get(key).length:0;
       const label=`${dn} ${MFR[cm]} ${cy}`;
       html+=`<div class="day-cell ${typeClass}${isCust?' has-custody':''}${isToday?' today':''}" data-key="${key}" data-label="${label}">
         <span class="edit-btn" data-key="${key}" data-label="${label}" title="Modifier la garde">✏️</span>
+        ${photoCount?`<span class="photo-btn" data-key="${key}" data-label="${label}" title="Photos">📷${photoCount}</span>`:''}
         <span class="note-btn${hasNote?' has-note':''}" data-key="${key}" data-label="${label}" title="Note">📝</span>
         <span class="day-num">${dn}</span>
         ${hasNote?`<div class="note-preview">${notes[key]}</div>`:''}
@@ -262,7 +357,17 @@ function render(){
   document.querySelectorAll('.note-btn').forEach(el=>{
     el.addEventListener('click',e=>{e.stopPropagation();openNoteModal(el.dataset.key,el.dataset.label);});
   });
+  document.querySelectorAll('.photo-btn').forEach(el=>{
+    el.addEventListener('click',e=>{e.stopPropagation();openPhotoModal(el.dataset.key,el.dataset.label);});
+  });
 }
+
+document.getElementById('import-btn').onclick=()=>document.getElementById('photo-input').click();
+document.getElementById('photo-input').addEventListener('change',e=>{
+  const files=[...e.target.files];
+  e.target.value='';
+  if(files.length)importPhotos(files);
+});
 
 loadData();
 </script>
