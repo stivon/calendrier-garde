@@ -57,10 +57,11 @@ Application Node.js/Express qui sert un calendrier de garde partagé pour deux e
 
 ```
 server.js          → point d'entrée : connexion Mongo, seed initial, static + routes
+lib/r2.js          → client S3 partagé pour Cloudflare R2 (routes/photos.js + migration hash)
 models/
   CustodyDay.js    → collection custody_days  { date, source, type }
   CustodyNote.js   → collection custody_notes { date, text }
-  Photo.js         → collection photos        { date, key, url, originalName, dateSource }
+  Photo.js         → collection photos        { date, key, url, originalName, dateSource, hash }
 routes/api.js      → 6 routes REST jours/notes (voir ci-dessous)
 routes/photos.js   → 4 routes REST photos (upload par lot, liste, suppression, réassignation)
 public/index.html  → SPA vanilla JS : fetch API, rendu calendrier, modal note+type+photos
@@ -93,15 +94,19 @@ Sémantique du type : `evening` = soir seulement (bande bleue foncée en bas de 
 | `url` | String | URL publique construite à partir de `R2_PUBLIC_BASE_URL` |
 | `originalName` | String | nom de fichier d'origine (utile pour le debug/tri) |
 | `dateSource` | String | `"exif"` / `"filename"` / `"mtime"` — méthode ayant permis de déterminer `date` |
+| `hash` | String | SHA-256 de l'image compressée (unique, sparse) — sert à détecter les doublons à l'import |
 
 ### Stockage des photos (Cloudflare R2)
 
 Les photos ne sont **jamais** stockées sur le disque du serveur (Cloud Run est stateless) ni dans MongoDB. À l'upload (`routes/photos.js`) :
 1. Date déterminée par ordre de priorité : EXIF `DateTimeOriginal` (`exifr`) → nom de fichier Samsung `yyyymmdd_hhmmss` → date de dernière modification envoyée par le client (`mtimes[]`).
 2. Image redimensionnée (max 1600px de côté) et recompressée en JPEG qualité 75 via `sharp`, pour limiter l'espace occupé.
-3. Upload du buffer traité vers le bucket R2 via `@aws-sdk/client-s3` (API compatible S3), puis insertion du document `Photo` en base (seule la métadonnée est en Mongo, le binaire est dans R2).
+3. SHA-256 calculé sur l'image compressée. Si une `Photo` avec ce hash existe déjà, la photo est ignorée (pas de re-upload R2, pas de doublon en base) mais le lot continue normalement sur les fichiers suivants.
+4. Sinon, upload du buffer traité vers le bucket R2 via `@aws-sdk/client-s3` (API compatible S3, client partagé dans `lib/r2.js`), puis insertion du document `Photo` en base (seule la métadonnée est en Mongo, le binaire est dans R2).
 
 Le bucket R2 doit être configuré en accès public (r2.dev ou domaine custom) pour que `url` soit directement affichable côté client sans signature.
+
+Une migration idempotente (`backfillPhotoHashes` dans `server.js`) calcule le `hash` au démarrage pour les photos importées avant l'ajout de ce champ, en le dérivant de leur copie déjà stockée dans R2 (même pipeline sharp, donc mêmes octets qu'un nouvel import identique).
 
 ### Routes API
 
@@ -115,7 +120,7 @@ POST   /api/notes/:date    → body {text} — si text vide, supprime la note (2
 DELETE /api/notes/:date    → 204
 
 GET    /api/photos?date=   → [{_id, date, url, originalName}] — date optionnelle, sinon toutes les photos
-POST   /api/photos/batch   → multipart/form-data, champs "photos" (fichiers) + "mtimes" (aligné par index) — 201 {results:[{originalName, date, url, error?}]}
+POST   /api/photos/batch   → multipart/form-data, champs "photos" (fichiers) + "mtimes" (aligné par index) — 201 {results:[{originalName, date, url, error?, duplicate?}]}
 PATCH  /api/photos/:id     → body {date} — réassigne une photo à un autre jour (le fichier R2 ne bouge pas)
 DELETE /api/photos/:id     → supprime l'objet R2 et le document Mongo, 204
 ```
@@ -145,7 +150,7 @@ Les notes, les jours de garde et les photos sont **indépendants** : on peut avo
 Bouton `📷 Importer des photos` dans l'en-tête → sélection multi-fichiers → `importPhotos()` :
 1. Découpe les fichiers sélectionnés en lots par **taille cumulée** (~22 Mo/lot, pas un nombre fixe de fichiers, car une photo brute de S24 Ultra peut faire plusieurs Mo).
 2. Envoie chaque lot séquentiellement à `POST /api/photos/batch` (`FormData`, avec `f.lastModified` par fichier dans `mtimes[]` puisque le nom/la date EXIF sont lus côté serveur).
-3. Affiche une progression ("Lot X/Y") dans une modale, puis `loadData()` + `alert()` des erreurs éventuelles par fichier en fin d'import.
+3. Affiche une progression ("Lot X/Y") dans une modale, puis `loadData()` + `alert()` en fin d'import récapitulant séparément le nombre de doublons ignorés (voir déduplication ci-dessus) et les erreurs éventuelles par fichier.
 
 Aucune étape de relecture/validation avant envoi (choix assumé pour rester simple) : une photo mal datée se corrige après coup depuis la galerie du jour (`openPhotoModal`) via le champ date ou la suppression.
 

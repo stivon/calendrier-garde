@@ -50,9 +50,18 @@ header p{font-size:13px;opacity:0.75;margin-top:2px}
 .import-btn:hover{background:rgba(255,255,255,0.25)}
 .photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:0.9rem;max-height:60vh;overflow-y:auto}
 .photo-item{position:relative}
-.photo-item img{width:100%;height:110px;object-fit:cover;border-radius:6px;border:1px solid #e5e5e3;display:block}
+.photo-item img{width:100%;height:110px;object-fit:cover;border-radius:6px;border:1px solid #e5e5e3;display:block;cursor:pointer}
 .photo-del{position:absolute;top:4px;right:4px;background:rgba(255,255,255,0.9);border:none;border-radius:50%;width:22px;height:22px;cursor:pointer}
-.photo-move{width:100%;margin-top:4px;font-size:11px;padding:2px;border:1px solid #d0d0cc;border-radius:4px;font-family:inherit}
+.photo-date-icon{position:absolute;bottom:4px;right:4px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;background:rgba(255,255,255,0.9);border-radius:50%;pointer-events:none}
+.photo-move{position:absolute;bottom:4px;right:4px;width:22px;height:22px;padding:0;border:none;border-radius:50%;opacity:0;cursor:pointer}
+.lightbox-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:200}
+.lightbox-img{max-width:90vw;max-height:90vh;object-fit:contain;border-radius:4px}
+.lightbox-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:16px;cursor:pointer}
+.lightbox-close:hover{background:rgba(255,255,255,0.3)}
+.lightbox-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:50%;width:44px;height:44px;font-size:22px;cursor:pointer}
+.lightbox-nav:hover{background:rgba(255,255,255,0.3)}
+.lightbox-prev{left:16px}
+.lightbox-next{right:16px}
 /* Spinner */
 .spinner-wrap{display:flex;align-items:center;justify-content:center;padding:4rem 1rem;flex-direction:column;gap:12px;color:#888;font-size:13px}
 .spinner{width:28px;height:28px;border:3px solid #e5e5e3;border-top-color:#185fa5;border-radius:50%;animation:spin 0.8s linear infinite}
@@ -208,6 +217,35 @@ async function saveNote(date,text){
   render();
 }
 
+function openLightbox(photos,startIndex){
+  let i=startIndex;
+  const lb=document.createElement('div');
+  lb.className='lightbox-backdrop';
+  function paint(){
+    lb.innerHTML=`
+      <button class="lightbox-close" title="Fermer">✕</button>
+      ${photos.length>1?'<button class="lightbox-nav lightbox-prev" title="Précédente">‹</button>':''}
+      <img class="lightbox-img" src="${photos[i].url}" alt="${photos[i].originalName||''}">
+      ${photos.length>1?'<button class="lightbox-nav lightbox-next" title="Suivante">›</button>':''}
+    `;
+    lb.querySelector('.lightbox-close').onclick=close;
+    const prev=lb.querySelector('.lightbox-prev');
+    const next=lb.querySelector('.lightbox-next');
+    if(prev)prev.onclick=e=>{e.stopPropagation();i=(i-1+photos.length)%photos.length;paint();};
+    if(next)next.onclick=e=>{e.stopPropagation();i=(i+1)%photos.length;paint();};
+  }
+  function close(){lb.remove();document.removeEventListener('keydown',onKey);}
+  function onKey(e){
+    if(e.key==='Escape')close();
+    else if(e.key==='ArrowLeft'&&photos.length>1){i=(i-1+photos.length)%photos.length;paint();}
+    else if(e.key==='ArrowRight'&&photos.length>1){i=(i+1)%photos.length;paint();}
+  }
+  lb.addEventListener('click',e=>{if(e.target===lb)close();});
+  document.addEventListener('keydown',onKey);
+  paint();
+  document.body.appendChild(lb);
+}
+
 function openPhotoModal(key,label){
   const photos=photosMap.get(key)||[];
   const bd=document.createElement('div');
@@ -219,7 +257,8 @@ function openPhotoModal(key,label){
         <div class="photo-item">
           <img src="${p.url}" alt="${p.originalName||''}">
           <button class="photo-del" data-id="${p._id}" title="Supprimer">🗑</button>
-          <input type="date" class="photo-move" data-id="${p._id}" value="${key}">
+          <span class="photo-date-icon">📅</span>
+          <input type="date" class="photo-move" data-id="${p._id}" value="${key}" title="Changer la date">
         </div>
       `).join('')}
     </div>
@@ -227,6 +266,9 @@ function openPhotoModal(key,label){
   </div>`;
   bd.addEventListener('click',e=>{if(e.target===bd)closeModal();});
   bd.querySelector('#cb').onclick=closeModal;
+  bd.querySelectorAll('.photo-item img').forEach((img,idx)=>{
+    img.onclick=()=>openLightbox(photos,idx);
+  });
   bd.querySelectorAll('.photo-del').forEach(btn=>{
     btn.onclick=async()=>{
       try{
@@ -265,7 +307,7 @@ async function importPhotos(files){
   document.body.appendChild(bd);
   modal=bd;
 
-  const errors=[];
+  const errors=[],duplicates=[];
   for(let i=0;i<batches.length;i++){
     bd.querySelector('#import-status').textContent=`Lot ${i+1}/${batches.length} en cours d'envoi (${batches[i].length} photos)…`;
     const fd=new FormData();
@@ -274,14 +316,20 @@ async function importPhotos(files){
       const res=await fetch('/api/photos/batch',{method:'POST',body:fd});
       if(!res.ok)throw new Error();
       const data=await res.json();
-      data.results.forEach(r=>{if(r.error)errors.push(`${r.originalName} : ${r.error}`);});
+      data.results.forEach(r=>{
+        if(r.error)errors.push(`${r.originalName} : ${r.error}`);
+        else if(r.duplicate)duplicates.push(r.originalName);
+      });
     }catch(e){
       errors.push(`Lot ${i+1}/${batches.length} : échec de l'envoi`);
     }
   }
   closeModal();
   await loadData();
-  if(errors.length)alert(`Import terminé avec ${errors.length} erreur(s) :\n${errors.join('\n')}`);
+  const messages=[];
+  if(duplicates.length)messages.push(`${duplicates.length} photo(s) déjà importée(s), ignorée(s).`);
+  if(errors.length)messages.push(`${errors.length} erreur(s) :\n${errors.join('\n')}`);
+  if(messages.length)alert(messages.join('\n\n'));
 }
 
 function closeModal(){if(modal){modal.remove();modal=null;}}

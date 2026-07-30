@@ -2,9 +2,13 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
+const { createHash } = require('crypto');
+const { GetObjectCommand } = require('@aws-sdk/client-s3');
 const apiRoutes = require('./routes/api');
 const photoRoutes = require('./routes/photos');
 const CustodyDay = require('./models/CustodyDay');
+const Photo = require('./models/Photo');
+const s3 = require('./lib/r2');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -68,6 +72,34 @@ async function seedCustodyDays() {
   }
 }
 
+async function streamToBuffer(stream) {
+  const chunks = [];
+  for await (const chunk of stream) chunks.push(chunk);
+  return Buffer.concat(chunks);
+}
+
+// Backfill : calcule le hash des photos importées avant l'introduction de la détection
+// de doublons, en le dérivant de leur copie déjà stockée dans R2 (identique à ce qui
+// serait recalculé à un nouvel import, puisque c'est le même pipeline sharp qui l'a produite).
+async function backfillPhotoHashes() {
+  const missing = await Photo.find({ hash: { $exists: false } });
+  let migrated = 0;
+  for (const photo of missing) {
+    try {
+      const obj = await s3.send(new GetObjectCommand({ Bucket: process.env.R2_BUCKET_NAME, Key: photo.key }));
+      const buffer = await streamToBuffer(obj.Body);
+      photo.hash = createHash('sha256').update(buffer).digest('hex');
+      await photo.save();
+      migrated++;
+    } catch (e) {
+      console.error(`Backfill hash échoué pour ${photo.key} :`, e.message);
+    }
+  }
+  if (migrated > 0) {
+    console.log(`Migration : hash calculé pour ${migrated} photo(s).`);
+  }
+}
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api', apiRoutes);
@@ -81,6 +113,7 @@ async function start() {
   await mongoose.connect(MONGODB_URI);
   console.log('Connecté à MongoDB Atlas.');
   await seedCustodyDays();
+  await backfillPhotoHashes();
   app.listen(PORT, () => console.log(`Serveur démarré sur le port ${PORT}`));
 }
 

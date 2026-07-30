@@ -22,6 +22,12 @@ const photoSchema = new mongoose.Schema({
     enum: ['exif', 'filename', 'mtime'],
     required: true
   },
+  hash: {
+    type: String,
+    index: true,
+    unique: true,
+    sparse: true
+  },
   uploadedAt: {
     type: Date,
     default: Date.now

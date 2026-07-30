@@ -3,8 +3,9 @@ const router = express.Router();
 const multer = require('multer');
 const sharp = require('sharp');
 const exifr = require('exifr');
-const { randomUUID } = require('crypto');
-const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { randomUUID, createHash } = require('crypto');
+const { PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const s3 = require('../lib/r2');
 const Photo = require('../models/Photo');
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -13,15 +14,6 @@ const FILENAME_DATE_RE = /^(\d{4})(\d{2})(\d{2})_\d{6}/;
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 15 * 1024 * 1024, files: 30 }
-});
-
-const s3 = new S3Client({
-  region: 'auto',
-  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID,
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY
-  }
 });
 
 function pad(n) { return String(n).padStart(2, '0'); }
@@ -78,6 +70,15 @@ router.post('/batch', upload.array('photos', 30), async (req, res) => {
         .jpeg({ quality: 75 })
         .toBuffer();
 
+      // Hash calculé sur l'image déjà compressée : permet de comparer aux photos
+      // importées avant l'ajout de ce champ (backfillées depuis leur copie R2, voir server.js).
+      const hash = createHash('sha256').update(processed).digest('hex');
+      const existing = await Photo.findOne({ hash }).lean();
+      if (existing) {
+        results.push({ originalName: file.originalname, date: existing.date, duplicate: true });
+        continue;
+      }
+
       const key = `photos/${date}/${randomUUID()}.jpg`;
       await s3.send(new PutObjectCommand({
         Bucket: process.env.R2_BUCKET_NAME,
@@ -87,7 +88,7 @@ router.post('/batch', upload.array('photos', 30), async (req, res) => {
       }));
 
       const url = `${process.env.R2_PUBLIC_BASE_URL}/${key}`;
-      await Photo.create({ date, key, url, originalName: file.originalname, dateSource: source });
+      await Photo.create({ date, key, url, originalName: file.originalname, dateSource: source, hash });
 
       results.push({ originalName: file.originalname, date, url });
     } catch (e) {
